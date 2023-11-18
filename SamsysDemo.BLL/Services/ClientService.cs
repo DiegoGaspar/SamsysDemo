@@ -67,7 +67,7 @@ namespace SamsysDemo.BLL.Services
                     response.Success = false;
                     return response;
                 }
-                client.Update(clientToUpdate.Name, clientToUpdate.PhoneNumber);
+                client.Update(clientToUpdate.Name, clientToUpdate.PhoneNumber, clientToUpdate.DataNascimento);
                 _unitOfWork.ClientRepository.Update(client, clientToUpdate.ConcurrencyToken);
                 await _unitOfWork.SaveAsync();
                 response.Success = true;
