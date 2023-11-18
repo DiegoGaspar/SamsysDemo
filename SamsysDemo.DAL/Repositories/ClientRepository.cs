@@ -7,15 +7,22 @@ namespace SamsysDemo.DAL.Repositories
     public class ClientRepository :  IClientRepository
     {
         private readonly ApplicationDbContext _context;
-
         public ClientRepository(ApplicationDbContext context) 
         {
             _context = context;
         }
-        public async Task<IList<Client>> ListAll()
+        public int TotalRegistro()
+        {            
+            return _context.Clients.Count();
+        }
+        public async Task<IList<Client>> ListAll(int skip, int take)
         {
             return await _context.Clients
+                                    .Where(c => c.IsActive == true)
                                     .AsNoTracking()
+                                    .OrderBy(x => x.Id)
+                                    .Skip((skip - 1) * take)
+                                    .Take(take)
                                     .ToListAsync();
         }
         public async Task Delete(object id, string userDelete, string concurrencyToken)

@@ -16,13 +16,28 @@ namespace SamsysDemo.BLL.Services
         {
             _unitOfWork = unitOfWork;
         }
-        public async Task<MessagingHelper<List<ClientDTO>>> ListAsync()
+        public async Task<MessagingHelper<PaginatedList<ClientDTO>>> ListAsync(int skip, int take)
         {
-            MessagingHelper<List<ClientDTO>> response = new();
+            MessagingHelper<PaginatedList<ClientDTO>> response = new();
+
+            var validacao = ValidarListarClientes(skip, take);
+            if (validacao.Message.Count() > 0)
+            {
+                response.SetMessage($"Não foi possível listar os clientes. {validacao.Message}");
+                response.Success = false;
+                return response;
+            }
+
             try
             {
                 List<ClientDTO> lista = new();
-                var clients = await _unitOfWork.ClientRepository.ListAll();
+                var clients = await _unitOfWork.ClientRepository.ListAll(skip,take);
+                if (clients.Count == 0 )
+                {
+                    response.SetMessage($"Não há clientes ativos cadastrados.");
+                    response.Success = true;
+                    return response;
+                }
                 foreach (var client in clients)
                 {
                     var clientdto = new ClientDTO
@@ -31,12 +46,19 @@ namespace SamsysDemo.BLL.Services
                         IsActive = client.IsActive,
                         ConcurrencyToken = Convert.ToBase64String(client.ConcurrencyToken),
                         Name = client.Name,
-                        PhoneNumber = client.PhoneNumber
+                        PhoneNumber = client.PhoneNumber, 
+                        DataNascimento = client.DataNascimento
                     };
                     lista.Add(clientdto);
                 }
+                var paginatedDinners = new PaginatedList<ClientDTO>();
+                paginatedDinners.Items.AddRange(lista);
+                paginatedDinners.CurrentPage = skip;
+                paginatedDinners.PageSize = take;
+                paginatedDinners.TotalRecords = _unitOfWork.ClientRepository.TotalRegistro(); 
 
-                response.Obj = lista;
+
+                response.Obj = paginatedDinners;
                 response.Success = true;
                 return response;
             }
@@ -65,7 +87,8 @@ namespace SamsysDemo.BLL.Services
                     IsActive = client.IsActive,
                     ConcurrencyToken = Convert.ToBase64String(client.ConcurrencyToken),
                     Name = client.Name,
-                    PhoneNumber = client.PhoneNumber
+                    PhoneNumber = client.PhoneNumber,
+                    DataNascimento = client.DataNascimento
                 };
                 response.Success = true;
                 return response;
@@ -195,7 +218,7 @@ namespace SamsysDemo.BLL.Services
                 return response;
             }
         }
-
+       
         #region Métodos auxiliares
 
         //TODO - no minha visão o ideal seria criar um conceito de validações retornando Notificações
@@ -209,7 +232,17 @@ namespace SamsysDemo.BLL.Services
             }
             return true;
         }
+        private static MessagingHelper ValidarListarClientes(int skip, int take) 
+        {
+            MessagingHelper<PaginatedList<ClientDTO>> response = new();
+            if (skip < 1)
+                response.SetMessage($"O valor do número da página não pode ser menor que 1. Número informado: {skip}");
+            
+            if (take < 1)
+                response.SetMessage($"O valor do número de dados apresentador não pode ser menor que 1. Número informado: {take}");
 
+            return response;
+        }
 
         #endregion
     }
