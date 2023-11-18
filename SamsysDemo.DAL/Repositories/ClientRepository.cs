@@ -1,13 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SamsysDemo.Infrastructure.Entities;
-using SamsysDemo.Infrastructure.Helpers;
 using SamsysDemo.Infrastructure.Interfaces.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SamsysDemo.DAL.Repositories
 {
@@ -18,8 +11,13 @@ namespace SamsysDemo.DAL.Repositories
         public ClientRepository(ApplicationDbContext context) 
         {
             _context = context;
-        }     
-
+        }
+        public async Task<IList<Client>> ListAll()
+        {
+            return await _context.Clients
+                                    .AsNoTracking()
+                                    .ToListAsync();
+        }
         public async Task Delete(object id, string userDelete, string concurrencyToken)
         {
             Client? entityToDelete = await _context.Clients.FindAsync(id);
@@ -33,7 +31,6 @@ namespace SamsysDemo.DAL.Repositories
                 }
             }
         }    
-
         public async Task<Client?> GetById(object id, string[]? includedProperties = null)
         {
             var item = await _context.Clients.FindAsync(id);
@@ -51,12 +48,10 @@ namespace SamsysDemo.DAL.Repositories
             }
             return item;
         }
-
         public async Task Insert(Client entityToInsert)
         {
             await _context.Clients.AddAsync(entityToInsert);
         }
-
         public void Update(Client entityToUpdate, string concurrencyToken)
         {
             if (concurrencyToken != null)

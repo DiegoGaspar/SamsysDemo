@@ -3,12 +3,6 @@ using SamsysDemo.Infrastructure.Entities;
 using SamsysDemo.Infrastructure.Helpers;
 using SamsysDemo.Infrastructure.Interfaces.Repositories;
 using SamsysDemo.Infrastructure.Models.Client;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SamsysDemo.BLL.Services
 {
@@ -22,8 +16,37 @@ namespace SamsysDemo.BLL.Services
         {
             _unitOfWork = unitOfWork;
         }
+        public async Task<MessagingHelper<List<ClientDTO>>> ListAsync()
+        {
+            MessagingHelper<List<ClientDTO>> response = new();
+            try
+            {
+                List<ClientDTO> lista = new();
+                var clients = await _unitOfWork.ClientRepository.ListAll();
+                foreach (var client in clients)
+                {
+                    var clientdto = new ClientDTO
+                    {
+                        Id = client.Id,
+                        IsActive = client.IsActive,
+                        ConcurrencyToken = Convert.ToBase64String(client.ConcurrencyToken),
+                        Name = client.Name,
+                        PhoneNumber = client.PhoneNumber
+                    };
+                    lista.Add(clientdto);
+                }
 
-
+                response.Obj = lista;
+                response.Success = true;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.SetMessage($"Ocorreu um erro tentar listar os clientes. ERROR: {ex}");
+                return response;
+            }
+        }
         public async Task<MessagingHelper<ClientDTO>> Get(long id)
         {
             MessagingHelper<ClientDTO> response = new();
@@ -54,7 +77,42 @@ namespace SamsysDemo.BLL.Services
                 return response;
             }
         }
+        public async Task<MessagingHelper> CreateClient(CreateClientDTO clientDTO)
+        {
+            MessagingHelper<Client> response = new();
 
+            var validacao = ValidacaoCreate(clientDTO);
+            if (!validacao)
+            {
+                response.SetMessage($"Não foi possível inserir o cliente.");
+                response.Success = false;
+                return response;
+            }
+            try
+            {
+                //TODO - no meu entendimento o ideal seria trabalhar com mapeamento nesse caso.
+                var client = new Client
+                {
+                    Name = clientDTO.Name,
+                    DataNascimento = clientDTO.DataNascimento,
+                    PhoneNumber = clientDTO.PhoneNumber,
+                    IsActive = true,
+                    IsRemoved = false
+                };
+
+                await _unitOfWork.ClientRepository.Insert(client);
+                await _unitOfWork.SaveAsync();
+                response.Success = true;
+                response.Obj = client;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.SetMessage($"Ocorreu um erro inesperado ao tentar inserir o cliente. Tente novamente. ERROR:{ex}");
+                return response;
+            }
+        }
         public async Task<MessagingHelper> Update(long id, UpdateClientDTO clientToUpdate)
         {
             MessagingHelper<Client> response = new();
@@ -87,7 +145,6 @@ namespace SamsysDemo.BLL.Services
                 return response;
             }
         }
-
         public async Task<MessagingHelper> DisableClient(long id)
         {
             MessagingHelper<Client> response = new();
@@ -113,7 +170,6 @@ namespace SamsysDemo.BLL.Services
                 return response;
             }
         }
-
         public async Task<MessagingHelper> EnableClient(long id)
         {
             MessagingHelper<Client> response = new();
@@ -139,5 +195,22 @@ namespace SamsysDemo.BLL.Services
                 return response;
             }
         }
+
+        #region Métodos auxiliares
+
+        //TODO - no minha visão o ideal seria criar um conceito de validações retornando Notificações
+        private static bool ValidacaoCreate(CreateClientDTO client)
+        {
+            if (string.IsNullOrEmpty(client.Name) ||
+                client.DataNascimento > DateTime.Now ||
+                string.IsNullOrEmpty(client.PhoneNumber))
+            {
+                return false;
+            }
+            return true;
+        }
+
+
+        #endregion
     }
 }
