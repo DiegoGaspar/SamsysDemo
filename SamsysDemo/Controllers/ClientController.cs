@@ -33,7 +33,7 @@ public class ClientController : ControllerBase
     /// <param name="pageNumber"></param> 
     /// <param name="pageSize"></param>
     /// <returns></returns>
-    [HttpGet("pageNumber/{pageNumber:int}/pageSize{pageSize:int}")]
+    [HttpGet("pageNumber={pageNumber:int}/pageSize={pageSize:int}")]
     public async Task<MessagingHelper<PaginatedList<ClientDTO>>> ListAsync(int pageNumber = 1, int pageSize = 10)
     {
         return await _clientService.ListAsync(pageNumber, pageSize);

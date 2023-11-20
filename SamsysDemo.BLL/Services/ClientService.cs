@@ -63,14 +63,14 @@ namespace SamsysDemo.BLL.Services
                     };
                     lista.Add(clientdto);
                 }
-                var paginatedDinners = new PaginatedList<ClientDTO>();
-                paginatedDinners.Items.AddRange(lista);
-                paginatedDinners.CurrentPage = skip;
-                paginatedDinners.PageSize = take;
-                paginatedDinners.TotalRecords = _unitOfWork.ClientRepository.TotalRegistro(); 
+                var paginatedClients = new PaginatedList<ClientDTO>();
+                paginatedClients.Items.AddRange(lista);
+                paginatedClients.CurrentPage = skip;
+                paginatedClients.PageSize = take;
+                paginatedClients.TotalRecords = _unitOfWork.ClientRepository.TotalRegistro(); 
 
 
-                response.Obj = paginatedDinners;
+                response.Obj = paginatedClients;
                 response.Success = true;
                 return response;
             }

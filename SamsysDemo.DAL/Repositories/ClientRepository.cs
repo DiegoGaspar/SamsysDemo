@@ -13,7 +13,7 @@ namespace SamsysDemo.DAL.Repositories
         }
         public int TotalRegistro()
         {            
-            return _context.Clients.Count();
+            return _context.Clients.Where(c=>c.IsActive == true).Count();
         }
         public async Task<IList<Client>> ListAll(int skip, int take)
         {
