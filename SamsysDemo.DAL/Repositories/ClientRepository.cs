@@ -20,7 +20,7 @@ namespace SamsysDemo.DAL.Repositories
             return await _context.Clients
                                     .Where(c => c.IsActive == true)
                                     .AsNoTracking()
-                                    .OrderBy(x => x.Id)
+                                    .OrderByDescending(x => x.Id)
                                     .Skip((skip - 1) * take)
                                     .Take(take)
                                     .ToListAsync();
